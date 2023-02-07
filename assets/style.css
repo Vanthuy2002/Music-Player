@@ -40,7 +40,7 @@ html {
   padding: 16px 16px 14px;
   background-color: #fff;
   position: fixed;
-  top: 0;
+  top: 12px;
   width: 100%;
   max-width: 480px;
   border-bottom: 1px solid #ebebeb;
@@ -110,7 +110,6 @@ header h2 {
 
 .progress {
   width: 100%;
-  -webkit-appearance: none;
   height: 6px;
   background: #d3d3d3;
   outline: none;
