@@ -10,6 +10,7 @@ let player = $(".player");
 let progress = $("#progress");
 let nextBtn = $(".btn-next");
 let prevBtn = $(".btn-prev");
+let randomBtn = $(".btn-random");
 
 const app = {
   currentIndex: 0,
@@ -59,6 +60,7 @@ const app = {
     },
   ],
   isPlaying: false,
+  isRandom : false,
   render: function () {
     const html = this.song.map((sing) => {
       return `
@@ -145,12 +147,24 @@ const app = {
     };
     // Khi next bài hát
     nextBtn.onclick = ()=>{
-      this.nextSong();
+      if(this.isRandom){
+        this.randomSong();
+      }else{
+        this.nextSong();
+      }
       audio.play();
     },
     prevBtn.onclick = ()=>{
-      this.prevSong();
+      if(this.isRandom){
+        this.randomSong();
+      }else{
+        this.prevSong();
+      }
       audio.play();
+    },
+    randomBtn.onclick = ()=>{
+      this.isRandom = !this.isRandom;
+      randomBtn.classList.toggle("active", this.isRandom);
     }
   },
   loadCurrentSong: function () {
@@ -170,6 +184,14 @@ const app = {
     if(this.currentIndex < 0){
       this.currentIndex = this.song.length -1;
     }
+    this.loadCurrentSong();
+  },
+  randomSong : function(){
+    let newIndex ;
+    do {
+      newIndex = Math.floor(Math.random()*this.song.length);
+    } while(newIndex === this.currentIndex);
+    this.currentIndex = newIndex;
     this.loadCurrentSong();
   },
   start: function () {
