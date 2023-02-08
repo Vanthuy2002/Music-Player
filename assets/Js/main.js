@@ -7,9 +7,13 @@ let audio = $("#audio");
 const cd = $(".cd");
 let playBtn = $(".btn-toggle-play");
 let player = $(".player");
+let progress = $("#progress");
+let nextBtn = $(".btn-next");
+let prevBtn = $(".btn-prev");
 
 const app = {
   currentIndex: 0,
+  timeLine : 60000,
   song: [
     {
       name: "Biết Ông Thương Không",
@@ -32,7 +36,7 @@ const app = {
     {
       name: "Sang Xin Mịn.mp3",
       singer: "Singer 4",
-      path: "./assets/music/Sang Xin Mịn.mp3",
+      path: "./assets/music/Sang Xịn Mịn.mp3",
       img: "./assets/img/anh-nhac.jpg",
     },
     {
@@ -54,7 +58,7 @@ const app = {
       img: "./assets/img/anh-nhac.jpg",
     },
   ],
-  isPlaying : false,
+  isPlaying: false,
   render: function () {
     const html = this.song.map((sing) => {
       return `
@@ -93,17 +97,80 @@ const app = {
       cd.style.opacity = newWidth / cdWidth;
     };
 
+    //Xử lý CD quay khi chạy song
+    let cdAnimate = cdThumb.animate([
+      { transform: "rotate(360deg)" }
+    ], {
+      duration : this.timeLine,
+      interations: Infinity,
+    });
+    cdAnimate.pause();
     //Playlist khi click
-    playBtn.onclick = ()=>{
-        app.isPlaying = true;
+    playBtn.onclick = () => {
+      if (app.isPlaying) {
+        audio.pause();
+      } else {
         audio.play();
-        player.classList.add("playing");
+      }
+    };
+    //Khi song đưuọc play
+    audio.onplay = () => {
+      this.isPlaying = true;
+      player.classList.add("playing");
+      cdAnimate.play();
+    };
+    //Khi song pause
+    audio.onpause = () => {
+      this.isPlaying = false;
+      player.classList.remove("playing");
+      cdAnimate.pause();
+    };
+    //Khi tiến độ bài hát thay đổi
+    audio.ontimeupdate = () => {
+      //currentTime trả về thời gian hiện tại khi song được play
+      //duration trả về độ dài của song (seconds)
+      if (audio.duration) {
+        const progressPercent = Math.floor(
+          (audio.currentTime / audio.duration) * 100
+        );
+        progress.value = progressPercent;
+      }
+    };
+
+    //Xử lý khi tua song
+    progress.oninput = () => {
+      const seekTime = (audio.duration / 100) * progress.value;
+      //Lấy tổng tg / 100 , * giá trị khi tua => gán lại cho currentTime để audio update
+      audio.currentTime = seekTime;
+    };
+    // Khi next bài hát
+    nextBtn.onclick = ()=>{
+      this.nextSong();
+      audio.play();
+    },
+    prevBtn.onclick = ()=>{
+      this.prevSong();
+      audio.play();
     }
   },
-  loadCurrentSong : function(){
+  loadCurrentSong: function () {
     heading.innerText = this.currentSong.name;
     cdThumb.style.backgroundImage = `url('${this.currentSong.img}')`;
     audio.src = this.currentSong.path;
+  },
+  nextSong : function(){
+    this.currentIndex++;
+    if(this.currentIndex >= this.song.length){
+      this.currentIndex = 0;
+    }
+    this.loadCurrentSong();
+  },
+  prevSong : function(){
+    this.currentIndex--;
+    if(this.currentIndex < 0){
+      this.currentIndex = this.song.length -1;
+    }
+    this.loadCurrentSong();
   },
   start: function () {
     //Định nghĩa thuộc tính cho object
