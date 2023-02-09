@@ -11,6 +11,14 @@ let progress = $("#progress");
 let nextBtn = $(".btn-next");
 let prevBtn = $(".btn-prev");
 let randomBtn = $(".btn-random");
+let repeatBtn = $(".btn-repeat");
+
+/* Việc cần làm : 
+1. Render song ra view
+2. Thu nhỏ bài hát khi vuốt
+3. Lấy ra bài hát đầu tiên
+4. Quay CD khi phát nhạc
+5. Tua bài hát */
 
 const app = {
   currentIndex: 0,
@@ -61,10 +69,11 @@ const app = {
   ],
   isPlaying: false,
   isRandom : false,
+  isRepeat : false,
   render: function () {
-    const html = this.song.map((sing) => {
+    const html = this.song.map((sing, index) => {
       return `
-            <div class="song">
+            <div class="song ${index === this.currentIndex ? 'active' :''}" data-index = ${index}>
             <div
               class="thumb"
               style="
@@ -153,6 +162,8 @@ const app = {
         this.nextSong();
       }
       audio.play();
+      this.render();
+      this.scrollToActive();
     },
     prevBtn.onclick = ()=>{
       if(this.isRandom){
@@ -161,11 +172,40 @@ const app = {
         this.prevSong();
       }
       audio.play();
+      this.render();
     },
     randomBtn.onclick = ()=>{
       this.isRandom = !this.isRandom;
       randomBtn.classList.toggle("active", this.isRandom);
+    },
+    // Xử lý khi audio ended
+    audio.onended = () =>{
+      if(this.isRepeat){
+        audio.play();
+      }else{
+        nextBtn.click();
+      }
+    },
+    //Lang nghe hanh vi click vao playlist
+    playList.onclick = (e)=>{
+      //click song => chuyen den song 
+      if(e.target.closest(".song:not(.active)") || e.target.closest(".option")){
+       
+      }
     }
+    // Xu ly khi repeat song
+    repeatBtn.onclick = ()=>{
+      this.isRepeat = !this.isRepeat;
+      repeatBtn.classList.toggle("active", this.isRepeat);
+    }
+  },
+  scrollToActive : function(){
+    setTimeout(() => {
+      $(".song.active").scrollIntoView({
+        behavior : "smooth", 
+        block : "end"
+      })
+    }, 300);
   },
   loadCurrentSong: function () {
     heading.innerText = this.currentSong.name;
@@ -191,9 +231,11 @@ const app = {
     do {
       newIndex = Math.floor(Math.random()*this.song.length);
     } while(newIndex === this.currentIndex);
+    //Nếu neww === current => trùng bài hát, break vòng lặp
     this.currentIndex = newIndex;
     this.loadCurrentSong();
   },
+
   start: function () {
     //Định nghĩa thuộc tính cho object
     this.defineProperties();
