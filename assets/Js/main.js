@@ -12,6 +12,7 @@ let nextBtn = $(".btn-next");
 let prevBtn = $(".btn-prev");
 let randomBtn = $(".btn-random");
 let repeatBtn = $(".btn-repeat");
+const PLAYER_STORAGE = "F8__PLAYER";
 
 /* Việc cần làm : 
 1. Render song ra view
@@ -70,6 +71,11 @@ const app = {
   isPlaying: false,
   isRandom : false,
   isRepeat : false,
+  config : JSON.parse(localStorage.getItem(PLAYER_STORAGE)) || {},
+  setConfig : function(key, value){
+    this.config[key] = value;
+    localStorage.setItem(PLAYER_STORAGE, JSON.stringify(this.config))
+  },
   render: function () {
     const html = this.song.map((sing, index) => {
       return `
@@ -176,6 +182,7 @@ const app = {
     },
     randomBtn.onclick = ()=>{
       this.isRandom = !this.isRandom;
+      this.setConfig("isRandom", this.isRandom);
       randomBtn.classList.toggle("active", this.isRandom);
     },
     // Xử lý khi audio ended
@@ -188,14 +195,23 @@ const app = {
     },
     //Lang nghe hanh vi click vao playlist
     playList.onclick = (e)=>{
+      let songNode =e.target.closest(".song:not(.active)");
       //click song => chuyen den song 
-      if(e.target.closest(".song:not(.active)") || e.target.closest(".option")){
-       
+      if(songNode || e.target.closest(".option")){
+        if(songNode){
+          this.currentIndex = Number(songNode.dataset.index);
+          //Khi chuyển sang dataset thì bị thành chuỗi => convert lại number
+          //same => songNode.getAttribute("data-index")
+          this.loadCurrentSong();
+          this.render();
+          audio.play();
+        }
       }
     }
     // Xu ly khi repeat song
     repeatBtn.onclick = ()=>{
       this.isRepeat = !this.isRepeat;
+      this.setConfig("isRepeat", this.isRepeat);
       repeatBtn.classList.toggle("active", this.isRepeat);
     }
   },
@@ -203,7 +219,7 @@ const app = {
     setTimeout(() => {
       $(".song.active").scrollIntoView({
         behavior : "smooth", 
-        block : "end"
+        block : "end",
       })
     }, 300);
   },
@@ -235,8 +251,13 @@ const app = {
     this.currentIndex = newIndex;
     this.loadCurrentSong();
   },
+  loadConfig : function(){
+    this.isRandom = this.config.isRandom;
+    this.isRepeat = this.config.isRepeat;
+  },
 
   start: function () {
+    this.loadConfig();
     //Định nghĩa thuộc tính cho object
     this.defineProperties();
     //Lắng nghe sự kiện
@@ -245,6 +266,10 @@ const app = {
     this.loadCurrentSong();
     //render ra màn hình
     this.render();
+    //Hiển thị trạng thái ban đầu của btn repeat, random
+    //Mỗi lần load lại trang thì 2 cái nút kia sẽ được active luôn
+    randomBtn.classList.toggle("active", this.isRandom);
+    repeatBtn.classList.toggle("active", this.isRepeat)
   },
 };
 app.start();
